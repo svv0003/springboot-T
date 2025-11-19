@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class BoardScheduling {
     private final SchedulingService schedulingService;
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "0 0 0 1 * *")
     public void updatePopularBoards(){
         String startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         log.info("==== 인기글 업데이트 스케줄러 시작 [{}] ====", startTime);

@@ -28,12 +28,12 @@ public class MemberServiceImpl  implements MemberService {
         if(member == null) {
             return null;
         }
-       if(!bCryptPasswordEncoder.matches(memberPassword, member.getMemberPassword())) {
+        if(!bCryptPasswordEncoder.matches(memberPassword, member.getMemberPassword())) {
             return null;
         }
         member.setMemberPassword(null);
-            return member;
-        }
+        return member;
+    }
 
     @Override
     public void saveMember(Member member) {
@@ -47,21 +47,21 @@ public class MemberServiceImpl  implements MemberService {
     }
 
     public Map<String, Object> loginProcess(String memberEmail, String memberPassword, HttpSession session) {
-            Map<String, Object> res = new HashMap<>();
-            Member m = login(memberEmail,memberPassword);
-            if(m == null) {
-                res.put("success",false);
-                res.put("message","이메일 또는 비밀번호가 일치하지 않습니다.");
-                log.warn("로그인 실패: {}", memberEmail);
-                return  res;
-            }
-            SessionUtil.setLoginUser(session, m);
-            res.put("success",true);
-            res.put("message","로그인 성공");
-            res.put("user",m);
-            log.info("로그인 성공 : {}",m.getMemberEmail());
-        return res;
+        Map<String, Object> res = new HashMap<>();
+        Member m = login(memberEmail,memberPassword);
+        if(m == null) {
+            res.put("success",false);
+            res.put("message","이메일 또는 비밀번호가 일치하지 않습니다.");
+            log.warn("로그인 실패: {}", memberEmail);
+            return  res;
         }
+        SessionUtil.setLoginUser(session, m);
+        res.put("success",true);
+        res.put("message","로그인 성공");
+        res.put("user",m);
+        log.info("로그인 성공 : {}",m.getMemberEmail());
+        return res;
+    }
 
     /**
      * 로그아웃 처리
@@ -75,7 +75,7 @@ public class MemberServiceImpl  implements MemberService {
         res.put("message","로그아웃 성공");
 
         return res;
-        }
+    }
 
     /**
      * 로그인 상태확인
@@ -83,18 +83,18 @@ public class MemberServiceImpl  implements MemberService {
      * @return 로그인 이 되어있으면 로그인이 되어있는 상태로 반환
      */
     public Map<String, Object> checkLoginStatus(HttpSession session) {
-            Map<String, Object> res = new HashMap<>();
-            Member loginUser = (Member) session.getAttribute("loginUser");
+        Map<String, Object> res = new HashMap<>();
+        Member loginUser = (Member) session.getAttribute("loginUser");
 
         if(loginUser == null) {
             res.put("loggedIn", false);
             res.put("user", null);
             log.debug("로그인 상태 확인: 로그인되지 않음");
         }else {
-                res.put("loggedIn", true);
-                res.put("user",loginUser);
-                log.debug("로그인 상태 확인 : {}", loginUser.getMemberEmail());
-            }
-            return  res;
+            res.put("loggedIn", true);
+            res.put("user",loginUser);
+            log.debug("로그인 상태 확인 : {}", loginUser.getMemberEmail());
         }
+        return  res;
     }
+}
