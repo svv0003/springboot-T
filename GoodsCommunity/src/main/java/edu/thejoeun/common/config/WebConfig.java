@@ -19,7 +19,14 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                // REST API CORS 설정
                 registry.addMapping("/api/**")
+                        .allowedOrigins("http://localhost:3000", "http://localhost:57007") // 동시 사용 가능
+                        .allowCredentials(true)
+                        .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
+                        .allowedHeaders("*");
+                // WebSocket CORS 설정
+                registry.addMapping("/ws/**")
                         .allowedOrigins("http://localhost:3000", "http://localhost:57007") // 동시 사용 가능
                         .allowCredentials(true)
                         .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")

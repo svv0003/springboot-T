@@ -9,11 +9,13 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -21,7 +23,9 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class MemberAPIController {
-     private  final MemberServiceImpl memberService;
+    private  final MemberServiceImpl memberService;
+    private final SimpMessagingTemplate messagingTemplate; // WebSocket 메세지 전송
+
 
     @PostMapping("/login")
     public Map<String, Object> login(
@@ -55,11 +59,16 @@ public class MemberAPIController {
       try {
           memberService.saveMember(member);
           log.info("회원가입 성공 - 이메일 : {}",member.getMemberEmail());
+          //=======================================================================================
+          // WebSocket 통해 실시간 알림 전송한다.
+          Map<String, Object> notification = new HashMap<>();
+          notification.put("msg", "새로 가입했습니다.");
+          notification.put("name", member.getMemberName());
+          notification.put("timestamp", System.currentTimeMillis());
+          messagingTemplate.convertAndSend("/topic/notifications", notification);
+          log.info("회원가입 및 WebSocket 알림 전송 완료 : {}", member.getMemberName()); // 개발자 회사 로그용
       } catch (Exception e){
           log.error("회원가입 실패 - 이메일 : {}, 에러 : {}",member.getMemberEmail(),e.getMessage());
         }
-
     }
 }
-
-

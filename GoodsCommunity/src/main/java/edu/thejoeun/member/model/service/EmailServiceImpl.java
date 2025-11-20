@@ -192,9 +192,25 @@ public class EmailServiceImpl implements EmailService {
     }
 
     // 이메일, 인증번호 확인
+//    @Override
+//    public int checkAuthKey(Map<String, Object> map) {
+//        // log.info("service map data: {}",map);
+//        return emailMapper.checkAuthKey(map);
+//    }
+
     @Override
     public int checkAuthKey(Map<String, Object> map) {
-        // log.info("service map data: {}",map);
-        return emailMapper.checkAuthKey(map);
+
+        Map<String, Object> DBAuthKey = new HashMap<>();
+        DBAuthKey.put("email", map.get("email"));
+        String storedAuthKey = emailMapper.getAuthKeyByEmail(DBAuthKey);
+        String inputAuthKey = (String) map.get("authKey");
+
+        if (storedAuthKey != null && storedAuthKey.equals(inputAuthKey)) {
+            return 1;
+        } else {
+            log.warn("인증번호 불일치. 입력: {}, 저장: {}", inputAuthKey, storedAuthKey);
+            return 0;
+        }
     }
 }

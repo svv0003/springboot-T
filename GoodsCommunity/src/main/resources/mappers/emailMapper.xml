@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu.thejoeun.member.model.mapper.EmailMapper">
+
+    <insert id="insertAuthKey" parameterType="map">
+        INSERT INTO auth_key (auth_key, email, created_at)
+        VALUES (#{authKey}, #{email}, NOW())
+    </insert>
+
+    <update id="updateAuthKey" parameterType="map">
+        UPDATE
+    </update>
+
+    <select id="getAuthKeyByEmail" resultType="String" parameterType="map">
+        SELECT auth_key
+        FROM auth_key
+        WHERE email = #{email}
+    </select>
+
+    <delete id="deleteAuthKey" parameterType="map">
+        DELETE FROM auth_key
+        WHERE email = #{email}
+    </delete>
+
+</mapper>
