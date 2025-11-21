@@ -6,21 +6,23 @@
 
 <mapper namespace="edu.thejoeun.member.model.mapper.EmailMapper">
 
+    <!-- 인증번호 저장 및 갱신 -->
     <insert id="insertAuthKey" parameterType="map">
-        INSERT INTO auth_key (auth_key, email, created_at)
-        VALUES (#{authKey}, #{email}, NOW())
+        INSERT INTO auth_key (email, auth_key, created_at)
+        VALUES (#{email}, #{authKey}, NOW())
+        ON DUPLICATE KEY UPDATE
+            auth_key = #{authKey},
+            created_at = NOW()
     </insert>
 
-    <update id="updateAuthKey" parameterType="map">
-        UPDATE
-    </update>
-
-    <select id="getAuthKeyByEmail" resultType="String" parameterType="map">
-        SELECT auth_key
+    <!-- 기존 인증번호 조회 -->
+    <select id="getAuthKeyByEmail" resultType="Email">
+        SELECT *
         FROM auth_key
         WHERE email = #{email}
     </select>
 
+    <!-- 인증 성공 후 삭제 -->
     <delete id="deleteAuthKey" parameterType="map">
         DELETE FROM auth_key
         WHERE email = #{email}

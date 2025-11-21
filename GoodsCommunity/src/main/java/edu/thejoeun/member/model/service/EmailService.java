@@ -9,7 +9,7 @@ public interface EmailService {
      * @param email
      * @return  authKey
      */
-    String sendMail(String string, String email) ;
+    boolean sendMail(String string, String email) ;
 
     /**
      * 이메일, 인증번호 확인
