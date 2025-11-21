@@ -37,4 +37,5 @@ public interface BoardMapper {
      * @param id
      */
     void updateViewCount(int id);
+
 }

@@ -48,10 +48,11 @@ public class BoardController {
     @PostMapping  // api endpoint = /api/board 맨 위에 작성한 requestMapping 해당
     public void createBoard(@RequestBody Board board){
         boardService.createBoard(board);
-        //=======================================================================================
         // WebSocket 통해 실시간 알림 전송한다.
         Map<String, Object> notification = new HashMap<>();
         notification.put("msg", "새로운 게시글이 작성되었습니다.");
+        notification.put("boardId", board.getId());
+        log.info("boardId : {}", board.getId());
         notification.put("title", board.getTitle());
         notification.put("writer", board.getWriter());
         notification.put("timestamp", System.currentTimeMillis());

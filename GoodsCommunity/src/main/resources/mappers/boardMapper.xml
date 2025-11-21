@@ -66,14 +66,20 @@
     <!--
     insert update parameterType
     select           resultType
+
+    useGeneratedKeys : DB에서 자동으로 생성된 키를 가져올 지 여부. 기본값은 false
+    keyProperty      : 자동으로 생성된 키 값을 어떤 java 객체의 필드에 담을 지 지정하는 속성이다.
     -->
-    <insert id="insertBoard" parameterType="Board">
+    <insert id="insertBoard" parameterType="Board" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO board(title, content, writer)
-              VALUES (#{title}, #{content}, #{writer} )
+              VALUES (#{title}, #{content}, #{writer})
     </insert>
     <update id="updateViewCount" parameterType="int">
-        UPDATE  board
+        UPDATE board
         SET view_count = view_count + 1
         WHERE id = #{id}
     </update>
+    <select id="getBoardId" parameterType="Board">
+        SELECT
+    </select>
 </mapper>
