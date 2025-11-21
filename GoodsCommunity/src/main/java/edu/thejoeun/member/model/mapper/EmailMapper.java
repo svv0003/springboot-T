@@ -1,8 +1,6 @@
 package edu.thejoeun.member.model.mapper;
 
-
 import org.apache.ibatis.annotations.Mapper;
-
 import java.util.Map;
 
 @Mapper

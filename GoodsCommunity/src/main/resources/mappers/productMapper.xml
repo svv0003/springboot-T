@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu.thejoeun.product.model.mapper.ProductMapper">
+    <!-- 전체 상품 조회 최근 날짜로 오름차순 -->
+    <select id="getAllProducts" resultType="Product">
+        SELECT *
+        FROM product
+        ORDER BY created_at DESC
+    </select>
+    <!-- 상품 상세 조회 id로 상품의 세부내용 확인 -->
+    <select id="getProductById" resultType="Product">
+        SELECT *
+        FROM product
+        WHERE id = #{id}
+    </select>
+    <!-- 상품 코드로 상품 조회
+    ex) 다이소 상품 코드로 검색
+        모든 회사는 직원이 상품 코드로 검색 가능
+        검색창에 상품코드를 입력하면 조회 가능
+    -->
+    <select id="getProductByCode" resultType="Product">
+        SELECT *
+        FROM product
+        WHERE product_code = #{productCode}
+    </select>
+    <!-- 카테고리별 조회 / 카테고리에서 판매자가 판매중으로 표기한 상품만 조회-->
+    <select id="getProductsByCategory" resultType="Product">
+        SELECT *
+        FROM product
+        WHERE category = #{category}
+          AND is_active = TRUE
+        ORDER BY created_at DESC
+    </select>
+    <!--
+    상품 검색 검색창에 keyword 를 입력하면 상품명, 코드, 제조업체 = 브랜드 조회
+    품절, 판매중지 상품이 아니고, 판매중인 상품만 조회
+    지금은 업로드 최신순이지만, 판매순, 인기순 으로 조회할 수 있다.
+    -->
+    <select id="searchProducts" resultType="Product">
+        SELECT *
+        FROM product
+        WHERE (product_name LIKE CONCAT('%', #{keyword}, '%')
+            OR product_code LIKE CONCAT('%', #{keyword}, '%')
+            OR manufacturer LIKE CONCAT('%', #{keyword}, '%')
+            )
+          AND is_active = TRUE
+        ORDER BY created_at DESC
+    </select>
+    <!-- 상품등록 -->
+    <insert id="insertProduct" parameterType="Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (
+            product_name,product_code,category,price,stock_quantity,description,manufacturer,image_url,is_active)
+            )
+        VALUES (#{productName},#{productCode},#{category},#{price},#{stockQuantity},#{description},#{manufacturer},
+            #{imageUrl},#{isActive})
+    </insert>
+    <!-- 상품수정 -->
+    <update id="updateProduct" parameterType="Product">
+        UPDATE product
+        SET product_name = #{productName},
+            category = #{category},
+            price = #{price},
+            stock_quantity = #{stockQuantity},
+            description = #{description},
+            manufacturer = #{manufacturer},
+            image_url = #{imageUrl},
+            is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+    <!-- 상품삭제( 진짜 삭제하는 것이 아니라 비활성화로 상태 변경-->
+    <update id="deleteProduct" parameterType="Product">
+        UPDATE  product
+        SET is_active = FALSE
+        WHERE id = #{id}
+    </update>
+    <!-- 상품재고 수정 판매완료되거나, 반품처리일 때 조회수 감소 / 증가 -->
+    <update id="updateStock" parameterType="Product">
+        update product
+        SET stock_quantity = #{stockQuantity}
+        WHERE id = #{id}
+    </update>
+</mapper>
