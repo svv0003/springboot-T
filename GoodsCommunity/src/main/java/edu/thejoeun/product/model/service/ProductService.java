@@ -32,7 +32,7 @@ public interface ProductService {
      * @param category
      * @return
      */
-    List<Product> getProdctsByCategory(String category);
+    List<Product> getProductsByCategory(String category);
 
     /**
      * 상품명으로 조회

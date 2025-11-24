@@ -5,21 +5,26 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="edu.thejoeun.member.model.mapper.MemberMapper">
+    <!--
+    resultMap  : 수동으로 변수명칭 매칭 세팅
+    resultType : 자동 매칭 세팅
+    -->
 
     <select id="getMemberByEmail" resultType="Member">
         SELECT *
         FROM member
         WHERE member_email = #{memberEmail}
     </select>
-
-
-    <!--
-    keyProperty="memberId"  : DTO 키 속성 명칭
-    keyColumn="member_id"   : SQL 키 속성 명칭
-    -->
-    <insert id="saveMember" parameterType="Member" useGeneratedKeys="true" keyProperty="memberId" keyColumn="member_id">
+    <insert id="saveMember" parameterType="Member">
         INSERT INTO  member(member_name,member_email,member_password)
                     VALUES (#{memberName},#{memberEmail},#{memberPassword})
     </insert>
+        <!-- saveMember
+         private String memberName;
+    private String memberEmail;
+    private String memberPassword;
 
+    저장
+
+        -->
 </mapper>

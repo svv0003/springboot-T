@@ -6,21 +6,46 @@
 
 <mapper namespace="edu.thejoeun.common.scheduling.Mapper.SchedulingMapper">
 
-    <insert id="insertPopularBoards" parameterType="board">
+    <!--
+    LIMIT 10
+    -> ORACLE에서는 LIMIT 대신 FETCH FIRST 또는 ROWNUM 사용한다. (ROWNUM 코드 번잡하다.)
+       Now() 대신 SYSDATE 또는 CURRENT_TIMESTAMP 사용한다.
+
+    1번 방안
+             INSERT INTO  popular_board(board_id, ranking, updated_at)
+             SELECT
+                 id, ranking, CURRENT_TIMESTAMP
+             FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY view_count DESC) as ranking
+                FROM board
+                ORDER BY view_count DESC
+                )
+             ORDER BY  view_count DESC NULLS LAST
+             WHERE rownum <=10
+     2번 방안
+             INSERT INTO  popular_board(board_id, ranking, updated_at)
+             SELECT id, ROW_NUMBER() OVER(ORDER BY view_count DESC) as ranking, CURRENT_TIMESTAMP
+             FROM board
+             ORDER BY view_count DESC
+             FETCH FIRST 10 Rows ONLY
+
+    useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+    작성하지 않아도 문제되지 않으나 써 주는 것이 좋다.
+    -->
+    <insert id="insertPopularBoards" parameterType="board" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
      INSERT INTO  popular_board(board_id, ranking, updated_at)
-     SELECT
-         id, ROW_NUMBER() OVER(ORDER BY view_count DESC) as ranking, NOW()
+     SELECT id, ROW_NUMBER() OVER(ORDER BY view_count DESC) as ranking, CURRENT_TIMESTAMP
      FROM board
-     ORDER BY  view_count DESC
-     LIMIT 10
+     ORDER BY view_count DESC
+     FETCH FIRST 10 Rows ONLY
     </insert>
 
-    <select   id="selectPopularBoards" resultType="Board">
+    <select id="selectPopularBoards" resultType="Board">
         SELECT
             b.id, b.title,b.content,b.view_count, b.created_at, b.updated_at, p.ranking, p.updated_at
         FROM popular_board p
         JOIN board b ON board_id = b.id
-        ORDER BY P.ranking ASC
+        ORDER BY P.ranking ASC NULLS LAST
 
     </select>
 

@@ -53,8 +53,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> getProdctsByCategory(String category) {
-        List<Product> p = productMapper.getProdctsByCategory(category);
+    public List<Product> getProductsByCategory(String category) {
+        List<Product> p = productMapper.getProductsByCategory(category);
         log.info("상품 카테고리 : {}", p);
         return p;
     }
