@@ -28,7 +28,7 @@
         SELECT *
         FROM product
         WHERE category = #{category}
-          AND is_active = TRUE
+          AND is_active = 'Y'
         ORDER BY created_at DESC NULLS LAST
     </select>
 

@@ -43,6 +43,7 @@ public class ProductController {
         log.info("GET /api/product/{} - 상품 상세 조회",id);
         try {
             Product product = productService.getProductById(id);
+            log.info("product:{}",product);
             return ResponseEntity.ok(product);
         }catch (Exception e){
             Map<String, Object> res = new HashMap<>();
