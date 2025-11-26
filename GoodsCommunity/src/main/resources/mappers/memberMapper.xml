@@ -18,8 +18,16 @@
     keyColumn="member_id"   : SQL 키 속성 명칭
     -->
     <insert id="saveMember" parameterType="Member" useGeneratedKeys="true" keyProperty="memberId" keyColumn="member_id">
-        INSERT INTO  member(member_name,member_email,member_password)
-                    VALUES (#{memberName},#{memberEmail},#{memberPassword})
+        INSERT INTO  member(member_name,member_email,member_password, member_address, member_phone)
+                    VALUES (#{memberName},#{memberEmail},#{memberPassword}, #{memberAddress}, #{memberPhone})
     </insert>
+
+    <update id="updateMember" parameterType="Member">
+        UPDATE member
+        SET member_password = #{memberPassword},
+            member_address = #{memberAddress},
+            member_phone = #{memberPhone}
+        WHERE member_email = #{memberEmail}
+    </update>
 
 </mapper>

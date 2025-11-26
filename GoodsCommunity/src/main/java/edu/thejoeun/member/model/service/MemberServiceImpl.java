@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public class MemberServiceImpl  implements MemberService {
     }
 
     @Override
+    @Transactional
     public void saveMember(Member member) {
         String originPW = member.getMemberPassword(); // 기존 클라이언트 비밀번호 가져오기
         String encodedPw = bCryptPasswordEncoder.encode(originPW); // 비밀번호 암호화
@@ -96,5 +98,59 @@ public class MemberServiceImpl  implements MemberService {
             log.debug("로그인 상태 확인 : {}", loginUser.getMemberEmail());
         }
         return  res;
+    }
+
+    @Transactional
+    @Override
+    public Map<String, Object> updateMember(Member member, String memberPassword, HttpSession session) {
+        Map<String, Object> res = new HashMap<>();
+        try {
+            // 현재 로그인된 사용자 정보 가져오기
+            Member loginUser = SessionUtil.getLoginUser(session);
+            if(loginUser==null){
+                res.put("success", false);
+                res.put("message","로그인이 필요합니다.");
+                return res;
+            }
+            // DB 에서 최신 정보 가져오기
+            Member m  = memberMapper.getMemberByEmail(member.getMemberEmail());
+            // id where 조건으로 / 현재 비밀번호와 비밀번호 변경할 때 작성한 현재 비밀번호가 일치하는지 확인
+            // 비밀번호 변경하는 경우
+            if(memberPassword != null && !memberPassword.isEmpty()) {
+                // 현재 비밀번호와 DB에 저장된 비밀번호가 일치하는지 확인
+                if(!bCryptPasswordEncoder.matches(memberPassword, m.getMemberPassword())){
+                    res.put("success", false);
+                    res.put("message","wrongPassword");
+                    log.warn("비밀번호 불일치 - 이메일 : {}", loginUser.getMemberEmail());
+                    return res;
+                }
+
+                // 새 비밀번호 암호화 처리해서 저장할 수 있도록 로직 작성
+                if(member.getMemberPassword() != null && !member.getMemberPassword().isEmpty()) {
+                    String encodePw = bCryptPasswordEncoder.encode(member.getMemberPassword());
+                    member.setMemberPassword(encodePw);
+                }
+
+            }else {
+                // 비밀번호 변경하지 않은 경우 기존 비밀번호 유지
+                member.setMemberPassword(m.getMemberPassword());
+            }
+            member.setMemberId(m.getMemberId());
+            memberMapper.updateMember(member);
+            // 수정된 db 내역으로 session 업데이트
+            Member updateMember = memberMapper.getMemberByEmail(member.getMemberEmail());
+            updateMember.setMemberPassword(null);
+            SessionUtil.setLoginUser(session, updateMember);
+
+            res.put("success",true);
+            res.put("message","success");
+            log.info("회원정보 수정 성공 - 이메일 : {}", loginUser.getMemberEmail());
+
+        }catch (Exception e){
+            res.put("success",false);
+            res.put("message","회원정보 수정 중 오류가 발생했습니다.");
+            log.error("회원정보 수정 실패 - 에러 {}", e.getMessage());
+        }
+        return res;
     }
 }

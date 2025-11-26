@@ -19,5 +19,5 @@ public interface MemberMapper {
  */
     // 단순 저장으로 반환 없음
     void saveMember(Member member);
-
+    void updateMember(Member member);
 }

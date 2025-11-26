@@ -1,9 +1,8 @@
 package edu.thejoeun.member.model.service;
 
-import edu.thejoeun.member.model.mapper.EmailMapper;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,20 +13,21 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Transactional // 예외 발생하면 롤백할게 (기본값으로 커밋)
 @Slf4j
+@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
+    // EmailConfig 에  설정된 메일보내기 기능 과 관련 환경설정 사용
+    private final JavaMailSender mailSender;
 
-    @Autowired // EmailConfig 에  설정된 메일보내기 기능 과 관련 환경설정 사용
-    private JavaMailSender mailSender;
 
-    @Autowired
-    private EmailMapper emailMapper;
+    // 템플릿 엔진 이용해서 auth/signup.html 에 있는 html 코드를 java로 변환
+    private final SpringTemplateEngine templateEngine;
 
-    @Autowired // 템플릿 엔진 이용해서 auth/signup.html 에 있는 html 코드를 java로 변환
-    private SpringTemplateEngine templateEngine;
+    private final  Map<String,String> authKeyStorage = new ConcurrentHashMap<>();
 
     // 이메일 보내기
     @Override
@@ -35,17 +35,14 @@ public class EmailServiceImpl implements EmailService {
 
         // 6자리 난수 코드 생성하는 기능 불러오기
         String authKey = createAuthKey();
-
         try{
             // 제목
             String 제목 = null;
-
             switch (htmlName){
                 case "signup" :
                     제목 = "[나의 프로젝트 명칭 / 회사 명칭] 회원가입 인증번호 입니다.";
                     break;
             }
-
             // 인증 메일 보내기
             // MimeMessage : Java에서 메일을 보내기위해 메세지를 준비하는 객체
             // import jakarta.mail.internet.MimeMessage;
@@ -63,60 +60,18 @@ public class EmailServiceImpl implements EmailService {
             helper.addInline("logo"             , new ClassPathResource("static/images/logo.jpg"));
             // 모든 준비가 끝나면 진짜로 메일보내기~!
             mailSender.send(mimeMessage); // 이메일 발송
+
+            authKeyStorage.put(email, authKey);
+            log.info("인증키 메모리 저장 완료 - 이메일 : {} ", email);
         }catch (Exception e){
             e.printStackTrace();
             return null;
         }
 
-        // map 이름에 key -value 형태로 "인증키" : 6자리 , "email" : 인증번호 받은 사람의 이메일
-        // 형태로 잠시 자바에서 보관
-        Map<String, String> map = new HashMap<>();
-        map.put("authKey",authKey);
-        map.put("email",email);
-
-        // 이전에 해당 이메일로 인증키를 발송한 기록이 있다면 키를 갱신
-        int result = emailMapper.updateAuthKey(map); // 발송한 기록이 없으면 0이 result 담겨질 것
-
-        if(result == 0){ // 이전에 인증키를 보낸적이 없음
-            result = emailMapper.insertAuthKey(map); // 새로운 인증키 기록을 삽입하는 매퍼 메소드 호출
-            // 이메일에서 인증키를 무사히 보냈다면 result 에는 1이 담길 것
-        }
-        // 둘다 실패하여 최종 result 가 0 이라면 null 반환
-        if(result == 0){
-            return null;
-        }
         // 이메일 발송 & 인증키 잠시 보관을 모두 성공하면 생성된 인증키 반환
         return authKey;
     }
 
-        /*
-        필요한 타입:Map<String,Object>
-        제공된 타입:Map<String,String>
-
-        Map<String, String> map = new HashMap<>();
-
-        int updateAuthKey(Map<String, Object> map) ;
-
-        emailMapper.updateAuthKey()  내부는 String, Object 형태이고,
-        매개변수에 들어갈 데이터는          String, String 형태로 매개변수 내부 자료형 데이터와
-        매개변수 내부에 들어갈 데이터 자료형이 일치하지 않아 발생한 빨간줄
-         */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // HTML 파일을 읽어와 String으로 변환(타임리프 템플릿 사용해서 html 가져오기)
-    // import org.thymeleaf.context.Context;
     public String loadHtml(String authKey, String htmlName) {
         Context context = new Context() ;
 
@@ -136,7 +91,7 @@ public class EmailServiceImpl implements EmailService {
      * 인증번호 생성(영어 대문자 + 소문자  + 숫자 6자리
      * @return authKey
      */
-    public String createAuthKey(){
+    public String createAuthKey() {
         String key = ""; // 6자리 숫자 문자 혼합을 담을 빈 문자열 공간 생성
 
         for(int i=0; i<6; i++){ // key 의 내부가 6자리로 채워지기 위해 0 ~ 5까지 5번 반복
@@ -194,7 +149,22 @@ public class EmailServiceImpl implements EmailService {
     // 이메일, 인증번호 확인
     @Override
     public int checkAuthKey(Map<String, Object> map) {
-        log.info("service map data: {}",map);
-        return emailMapper.checkAuthKey(map);
+        String email = (String) map.get("email");
+        String inputAuthKey = (String) map.get("authKey");
+        log.info("인증키 확인 - 이메일 : {}", email);
+        String storedAuthKey = authKeyStorage.get(email);
+
+
+        if(storedAuthKey == null ) {
+            log.warn("저장된 인증키 없음 - 이메일 : {}", email);
+            return  0;
+        }
+        if(storedAuthKey != null && storedAuthKey.equals(inputAuthKey)){
+            log.info("인증 성공");
+            authKeyStorage.remove(email); //인증 후 삭제
+            return  1;
+        }
+        log.warn("인증 실패");
+        return 0;
     }
 }
