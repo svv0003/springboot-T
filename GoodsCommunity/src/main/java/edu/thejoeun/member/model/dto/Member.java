@@ -15,6 +15,7 @@ public class Member {
     private String memberPassword;
     private String memberPhone;
     private String memberAddress;
+    private String memberProfileImage;
     private String memberRole;
     private String memberCreatedAt;
     private String memberUpdatedAt;

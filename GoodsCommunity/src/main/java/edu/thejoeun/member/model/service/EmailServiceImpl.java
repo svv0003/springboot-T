@@ -32,7 +32,8 @@ public class EmailServiceImpl implements EmailService {
     // 이메일 보내기
     @Override
     public String sendMail(String htmlName, String email) {
-
+        // 이메일 정제 (정리하여 제공한다.)
+        email = email.trim().replaceAll("^\"|\"$","");
         // 6자리 난수 코드 생성하는 기능 불러오기
         String authKey = createAuthKey();
         try{
@@ -62,12 +63,11 @@ public class EmailServiceImpl implements EmailService {
             mailSender.send(mimeMessage); // 이메일 발송
 
             authKeyStorage.put(email, authKey);
-            log.info("인증키 메모리 저장 완료 - 이메일 : {} ", email);
+            log.info("인증키 메모리 저장 완료 - 이메일 : {}, 인증번호 : {}", email, authKey);
         }catch (Exception e){
             e.printStackTrace();
             return null;
         }
-
         // 이메일 발송 & 인증키 잠시 보관을 모두 성공하면 생성된 인증키 반환
         return authKey;
     }
@@ -149,11 +149,11 @@ public class EmailServiceImpl implements EmailService {
     // 이메일, 인증번호 확인
     @Override
     public int checkAuthKey(Map<String, Object> map) {
-        String email = (String) map.get("email");
+        // String email = (String) map.get("email");    <- 공백과 "" String 형태
+        String email = ((String) map.get("email")).trim().replaceAll("^\"|\"$","");
         String inputAuthKey = (String) map.get("authKey");
         log.info("인증키 확인 - 이메일 : {}", email);
         String storedAuthKey = authKeyStorage.get(email);
-
 
         if(storedAuthKey == null ) {
             log.warn("저장된 인증키 없음 - 이메일 : {}", email);

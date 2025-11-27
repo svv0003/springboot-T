@@ -26,7 +26,15 @@
         UPDATE member
         SET member_password = #{memberPassword},
             member_address = #{memberAddress},
+            member_profile_image = #{memberProfileImage},
             member_phone = #{memberPhone}
+        WHERE member_email = #{memberEmail}
+    </update>
+
+    <!-- 프로필 이미지만 업데이트 -->
+    <update id="updateProfileImage">
+        UPDATE member
+        SET member_profile_image = #{memberProfileImage}
         WHERE member_email = #{memberEmail}
     </update>
 

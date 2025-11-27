@@ -18,7 +18,6 @@ import java.util.Map;
 public class EmailController {
     private final EmailService emailService;
 
-
     @PostMapping("/signup") // api : /email/signup
     public int signup(@RequestBody String email){
         String authKey = emailService.sendMail("signup", email);
