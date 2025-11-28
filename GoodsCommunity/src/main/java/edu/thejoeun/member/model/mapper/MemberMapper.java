@@ -2,6 +2,7 @@ package edu.thejoeun.member.model.mapper;
 
 import edu.thejoeun.member.model.dto.Member;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface MemberMapper {
@@ -20,5 +21,7 @@ public interface MemberMapper {
     // 단순 저장으로 반환 없음
     void saveMember(Member member);
     void updateMember(Member member);
-    void updateProfileImage(String memberEmail, String memberProfileImage);
+    // void updateProfileImage(String memberEmail, String memberProfileImage);
+    void updateProfileImage(@Param("memberEmail") String memberEmail,
+                            @Param("memberProfileImage") String memberProfileImage);
 }

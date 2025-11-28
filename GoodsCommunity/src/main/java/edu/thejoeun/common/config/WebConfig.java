@@ -1,8 +1,10 @@
 package edu.thejoeun.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /*
@@ -13,7 +15,12 @@ WebConfig 이름을 사용하거나 CorsConfig 라는 명칭을 사용하기도 
 */
 
 @Configuration
-public class WebConfig {
+public class WebConfig implements WebMvcConfigurer {
+
+    // profile.upload.path
+    @Value("${file.upload.path}")
+    private String fileUploadPath;
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -33,6 +40,22 @@ public class WebConfig {
                         .allowedHeaders("*");
             }
         };
+    }
+
+
+    // 프로필 이미지 정적 리소스 매핑 추가
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // profile_images/** 로 요청이 오면 실제 파일 시스템 경로에서 이미지 가져오기
+        // 폴더별로 registry 설정하며, registry는 다수가 될 수 있다.
+        registry.addResourceHandler("/profile_images/**")
+                .addResourceLocations("file:"+fileUploadPath+"/");
+        // 게시물 이미지 폴더 수정
+        // registry.addResourceHandler("/profile_images/**")
+        //        .addResourceLocations("file:"+fileUploadPath+"/");
+        // 상품 이미지 폴더 수정
+        // registry.addResourceHandler("/profile_images/**")
+        //        .addResourceLocations("file:"+fileUploadPath+"/");
     }
 }
 

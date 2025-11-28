@@ -19,7 +19,7 @@
     -->
     <insert id="saveMember" parameterType="Member" useGeneratedKeys="true" keyProperty="memberId" keyColumn="member_id">
         INSERT INTO  member(member_name,member_email,member_password, member_address, member_phone)
-                    VALUES (#{memberName},#{memberEmail},#{memberPassword}, #{memberAddress}, #{memberPhone})
+                    VALUES (#{memberName}, #{memberEmail}, #{memberPassword}, #{memberAddress}, #{memberPhone})
     </insert>
 
     <update id="updateMember" parameterType="Member">
