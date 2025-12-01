@@ -1,12 +1,20 @@
 package edu.thejoeun.product.model.service;
 
+import edu.thejoeun.common.exception.ForbiddenException;
+import edu.thejoeun.common.exception.UnauthorizedException;
+import edu.thejoeun.common.util.FileUploadService;
+import edu.thejoeun.common.util.SessionUtil;
+import edu.thejoeun.member.model.dto.Member;
 import edu.thejoeun.product.model.dto.Product;
 import edu.thejoeun.product.model.mapper.ProductMapper;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -15,6 +23,8 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
+    private final FileUploadService fileUploadService;
+
 
     /*
     @Override
@@ -165,5 +175,26 @@ public class ProductServiceImpl implements ProductService {
             log.error("재고 업데이트 실패 : {}", id);
             throw new RuntimeException("재고 업데이트 실패했습니다.");
         }
+    }
+
+    @Override
+    @Transactional
+    public String updateProductImage(String productCode, MultipartFile file, HttpSession session) throws IOException {
+        // 파일 유효성 검증
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("파일이 비어있습니다.");
+        }
+        // 이미지 파일인지 확인
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("파일 크기는 5MB를 초과할 수 없습니다.");
+        }
+        String imageUrl = fileUploadService.uploadProductImage(file);
+        productMapper.updateProductImage(productCode, imageUrl);
+        log.info("제품 이미지 DB 업데이트 완료 - 제품번호 : {}", productCode);
+        return imageUrl;
     }
 }

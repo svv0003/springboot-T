@@ -22,9 +22,50 @@ import java.util.UUID;
 @Slf4j
 public class FileUploadService {
     // import org.springframework.beans.factory.annotation.Value;
-    @Value("${file.upload.path}")
-    private String uploadPath;
+    @Value("${file.upload.profile-path}")
+    private String profilePath;
 
+    @Value("${file.upload.product-path}")
+    private String productPath;
+
+    /**
+     * 프로필 이미지 업로드
+     * @param file          업로드할 이미지 파일
+     * @return              저장된 파일의 경로 (DB에 저장할 상대 경로)
+     * @throws IOException  파일 처리 중 오류 발생 시 예외 처리
+     */
+    public String uploadProductImage(MultipartFile file) throws IOException {
+        if(file.isEmpty()) {
+            throw new IOException("업로드할 파일이 없습니다.");
+        }
+        File uploadDir = new File(productPath);
+        if(!uploadDir.exists()) {
+            boolean created = uploadDir.mkdirs();
+            if(!created) {
+                throw new IOException("업로드 디렉토리 생성에 실패했습니다.");
+            }
+            log.info("업로드 디렉토리 생성 : {}", productPath);
+        }
+        String originalFilename = file.getOriginalFilename();
+        if(originalFilename == null || originalFilename.isEmpty()) {
+            throw new IOException("파일명이 유효하지 않습니다.");
+        }
+        String extension = "";
+        int lastDotIndex = originalFilename.lastIndexOf('.');
+        if(lastDotIndex > 0) {
+            extension = originalFilename.substring(lastDotIndex + 1);
+        }
+        String uniqueFileName = UUID.randomUUID().toString() + "." + extension;
+        Path filePath = Paths.get(productPath, uniqueFileName);
+        try {
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("제품 이미지 업로드 성공 : {} -> {}", originalFilename, uniqueFileName);
+        } catch (IOException e) {
+            log.error("파일 저장 중 오류 발생 : {}", e.getMessage());
+            throw new  IOException("파일 저장을 실패했습니다. " + e.getMessage());
+        }
+        return "/product_images/"+uniqueFileName;
+    }
     /**
      * 프로필 이미지 업로드
      * @param file          업로드할 이미지 파일
@@ -40,13 +81,13 @@ public class FileUploadService {
         업로드 디렉토리 생성
         (폴더가 존재하지 않는 경우 디렉토리 = 폴더 컴퓨터 만든 회사에서 지칭하는 명칭이 다르다.)
          */
-        File uploadDir = new File(uploadPath);
+        File uploadDir = new File(profilePath);
         if(!uploadDir.exists()) {
             boolean created = uploadDir.mkdirs();
             if(!created) {
                 throw new IOException("업로드 디렉토리 생성에 실패했습니다.");
             }
-            log.info("업로드 디렉토리 생성 : {}", uploadPath);
+            log.info("업로드 디렉토리 생성 : {}", profilePath);
         }
         /*
         프로필 폴더 / 유저 폴더 / 프로필 이미지 구조
@@ -66,7 +107,7 @@ public class FileUploadService {
         // UUID 사용하여 고유 파일명 생성한다.
         String uniqueFileName = UUID.randomUUID().toString() + "." + extension;
         // 파일 저장 경로 설정한다.
-        Path filePath = Paths.get(uploadPath, uniqueFileName);
+        Path filePath = Paths.get(profilePath, uniqueFileName);
         /*
         파일 저장한다.
         이미지 파일처럼 긴 문자열로 이루어진 파일은 반드시 업로드, 다운로드 중에 오류가 발생할 수 있어서 try-catch문을 사용해야 한다.
@@ -81,5 +122,4 @@ public class FileUploadService {
         // DB에서 저장할 상대 경로를 반환한다. (웹에서 접근 가능한 경로)
         return "/profile_images/"+uniqueFileName;
     }
-
 }

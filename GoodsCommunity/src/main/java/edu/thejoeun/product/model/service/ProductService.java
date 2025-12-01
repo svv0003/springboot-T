@@ -1,9 +1,13 @@
 package edu.thejoeun.product.model.service;
 
+import edu.thejoeun.member.model.dto.Member;
 import edu.thejoeun.product.model.dto.Product;
+import jakarta.servlet.http.HttpSession;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -57,5 +61,8 @@ public interface ProductService {
 
     // 재고 업데이트
     void updateStock(int id, int quantity);
+
+    String updateProductImage(String productCode, MultipartFile file, HttpSession session) throws IOException;
+
 
 }

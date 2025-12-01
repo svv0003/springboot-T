@@ -1,13 +1,17 @@
 package edu.thejoeun.product.controller;
 
 
+import edu.thejoeun.common.util.SessionUtil;
+import edu.thejoeun.member.model.dto.Member;
 import edu.thejoeun.product.model.dto.Product;
 import edu.thejoeun.product.model.service.ProductService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -206,6 +210,38 @@ public class ProductController {
             res.put("message","재고 업데이트 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
 
+        }
+    }
+    @PostMapping("/product-image")
+    public ResponseEntity<Map<String, Object>> uploadProfileImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("productCode") String productCode,
+            HttpSession session){
+        Map<String, Object> res = new HashMap<>();
+        try{
+            String imageUrl = productService.updateProductImage(productCode, file, session);
+            res.put("success", true);
+            res.put("message", "제품 이미지 업데이트되었습니다.");
+            res.put("imageUrl", imageUrl);
+            log.info("제품 이미지 업로드 성공 - 제품코드 : {}, 파일명 : {}", productCode, file.getOriginalFilename());
+            return ResponseEntity.ok(res);  // 업데이트가 무사히 완료되면 200 전달한다.
+        } catch (IllegalStateException e) {
+            res.put("success", false);
+            res.put("message", e.getMessage());
+            return ResponseEntity.status(401).body(res);
+        } catch (SecurityException e) {
+            res.put("success", false);
+            res.put("message", e.getMessage());
+            return ResponseEntity.status(403).body(res);
+        } catch (IllegalArgumentException e) {
+            res.put("success", false);
+            res.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(res);
+        } catch (Exception e) {
+            log.error("프로필 이미지 업로드 실패 - 제품코드 : {}, 오류 : {}", productCode, e.getMessage());
+            res.put("success", false);
+            res.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(res);
         }
     }
 }
